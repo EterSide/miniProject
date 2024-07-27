@@ -132,36 +132,37 @@ public class MemberService {
         
         // 연차목록
         //List<Annual> annuals = annualRepository.findByMember(member);
-        Annual byIdAndYear = annualRepository.findByMemberAndYear(member, request.getYear());
+        Annual byMemberAndYear = annualRepository.findByMemberAndYear(member, request.getYear());
 
         long daysBetween = ChronoUnit.DAYS.between(LocalDate.now(), request.getUseDay());
 
         System.out.println("days" + daysBetween);
 
         // 가지고 있는 연차가 지금 쓰려는 기간보다 긴지 확인
-        int abc = byIdAndYear.getAnnualCount() - period;
+        int abc = byMemberAndYear.getAnnualCount() - period;
 
 
         // 가진 연차보다 오래 썻거나 사용일이 규칙보다 짧으면 오류 발생하게
-        if (byIdAndYear.getAnnualCount() < period && daysBetween < rule) {
+        if (byMemberAndYear.getAnnualCount() < period && daysBetween < rule) {
             throw new IllegalArgumentException();
-        } else if (byIdAndYear.getAnnualCount() >= period && daysBetween > rule ) {
+        } else if (byMemberAndYear.getAnnualCount() >= period && daysBetween > rule ) {
             System.out.println("작동되나요?");
             AttendanceHistory attendance = attendanceHistoryRepository.save(new AttendanceHistory(member, null, null, LocalDateTime.of(request.getUseDay().getYear(), request.getUseDay().getMonth(), request.getUseDay().getDayOfMonth(), 0, 0)));
             attendance.setToday(request.getUseDay());
             attendance.setStartTime(LocalDateTime.of(request.getUseDay().getYear(), request.getUseDay().getMonth(), request.getUseDay().getDayOfMonth(), 0, 0));
-            byIdAndYear.setAnnualCount(abc); // 사용한 만큼 연차일도 수정
+            byMemberAndYear.setAnnualCount(abc); // 사용한 만큼 연차일도 수정
         }
 
     }
 
-    public int getAnnual(Long memberId) {
+    public int getAnnual(Long memberId, int year) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(IllegalArgumentException::new);
 
-        List<Annual> annuals = annualRepository.findByMember(member);
+        //List<Annual> annuals = annualRepository.findByMember(member);
+        Annual byMemberAndYear = annualRepository.findByMemberAndYear(member, year);
 
-        return annuals.get(annuals.size()-1).getAnnualCount();
+        return byMemberAndYear.getAnnualCount();
 
     }
 
@@ -170,8 +171,6 @@ public class MemberService {
         // 1. 모든 멤버를 가져온다
         List<Member> members = memberRepository.findAll();
         // 2. 달을 기반으로 각 멤버의 총 업무시간을 나오게한다
-
-
 
         return null;
     }

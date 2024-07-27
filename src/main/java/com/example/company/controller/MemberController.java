@@ -56,8 +56,8 @@ public class MemberController {
     }
 
     @GetMapping("/member/annual")
-    public int getAnnual(@RequestParam Long memberId) {
-        return memberService.getAnnual(memberId);
+    public int getAnnual(@RequestParam Long memberId, @RequestParam int year) {
+        return memberService.getAnnual(memberId, year);
     }
 
     @GetMapping("/member/overtime")
