@@ -119,32 +119,35 @@ public class MemberService {
     }
     @Transactional
     public void annualUse(AnnualUseRequest request) {
-
+        // 연차 기간 계산
         int period = request.getEndDay().getDayOfMonth() - request.getStartDay().getDayOfMonth();
-
+        // 멤버 정의
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(IllegalArgumentException::new);
+        // 팀 연차 사용 규칙
         int rule = member.getTeam().getRule();
         System.out.println("period의 길이는" + period);
         System.out.println("rule의 길이는 " + rule);
-
+        
+        // 연차목록
         List<Annual> annuals = annualRepository.findByMember(member);
-
-
-
+        
         System.out.println("annuals의 사이즈" + annuals.size());
-
-        int abc = annuals.get(annuals.size()-1).getAnnualCount() - period;
-        if (annuals.get(annuals.size()-1).getAnnualCount() < period) {
+        
+        // 가지고 있는 연차가 지금 쓰려는 기간보다 긴지 확인
+        int abc = annuals.get(annuals.size()-1).getAnnualCount() - period - 1;
+        
+        // 가진 연차보다 오래 썻거나 사용일이 규칙보다 짧으면 오류 발생하게
+        if (annuals.get(annuals.size()-1).getAnnualCount() < period && (request.getStartDay().getDayOfMonth() - LocalDate.now().getDayOfMonth() ) < rule) {
             throw new IllegalArgumentException();
-        } else if (annuals.get(annuals.size()-1).getAnnualCount() >= period) {
+        } else if (annuals.get(annuals.size()-1).getAnnualCount() >= period && (request.getStartDay().getDayOfMonth() - LocalDate.now().getDayOfMonth() ) > rule ) {
             for (int i = 0; i <= period; i++) {
                 AttendanceHistory attendance = attendanceHistoryRepository.save(new AttendanceHistory(member, request.getStartDay().plusDays(i), LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0), LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0)));
                 attendance.setToday(request.getStartDay().plusDays(i));
                 attendance.setStartTime(LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0));
-
+                // today랑 startTime은 생성할 때 알아서 만들어져서 셋으로 바로 수정
             }
-            annuals.get(annuals.size()-1).setAnnualCount(abc-1);
+            annuals.get(annuals.size()-1).setAnnualCount(abc); // 사용한 만큼 연차일도 수정
         }
 
     }
