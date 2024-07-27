@@ -7,9 +7,10 @@ import java.time.LocalDate;
 public class AnnualUseRequest {
 
     private Long memberId;
-    private int teamRule;
 
-    private LocalDate startDay;
-    private LocalDate endDay;
+    private int year;
+
+    private LocalDate useDay;
+    //private LocalDate endDay;
 
 }

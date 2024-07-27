@@ -7,9 +7,7 @@ import com.example.company.dto.request.AnnualUseRequest;
 import com.example.company.dto.request.AttendanceHistoryCheckRequest;
 import com.example.company.dto.request.AttendanceHistoryRequest;
 import com.example.company.dto.request.MemberAddRequest;
-import com.example.company.dto.response.AttendanceHistoryResponse;
-import com.example.company.dto.response.DetailDto;
-import com.example.company.dto.response.MemberResponse;
+import com.example.company.dto.response.*;
 import com.example.company.repository.AnnualRepository;
 import com.example.company.repository.AttendanceHistoryRepository;
 import com.example.company.repository.MemberRepository;
@@ -17,13 +15,13 @@ import com.example.company.repository.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.temporal.TemporalAmount;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -120,7 +118,8 @@ public class MemberService {
     @Transactional
     public void annualUse(AnnualUseRequest request) {
         // 연차 기간 계산
-        int period = request.getEndDay().getDayOfMonth() - request.getStartDay().getDayOfMonth();
+        //int period = request.getEndDay().getDayOfMonth() - request.getStartDay().getDayOfMonth();
+        int period = 1;
         // 멤버 정의
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(IllegalArgumentException::new);
@@ -128,26 +127,30 @@ public class MemberService {
         int rule = member.getTeam().getRule();
         System.out.println("period의 길이는" + period);
         System.out.println("rule의 길이는 " + rule);
+
+        System.out.println("useDay = " + request.getUseDay());
         
         // 연차목록
-        List<Annual> annuals = annualRepository.findByMember(member);
-        
-        System.out.println("annuals의 사이즈" + annuals.size());
-        
+        //List<Annual> annuals = annualRepository.findByMember(member);
+        Annual byIdAndYear = annualRepository.findByMemberAndYear(member, request.getYear());
+
+        long daysBetween = ChronoUnit.DAYS.between(LocalDate.now(), request.getUseDay());
+
+        System.out.println("days" + daysBetween);
+
         // 가지고 있는 연차가 지금 쓰려는 기간보다 긴지 확인
-        int abc = annuals.get(annuals.size()-1).getAnnualCount() - period - 1;
-        
+        int abc = byIdAndYear.getAnnualCount() - period;
+
+
         // 가진 연차보다 오래 썻거나 사용일이 규칙보다 짧으면 오류 발생하게
-        if (annuals.get(annuals.size()-1).getAnnualCount() < period && (request.getStartDay().getDayOfMonth() - LocalDate.now().getDayOfMonth() ) < rule) {
+        if (byIdAndYear.getAnnualCount() < period && daysBetween < rule) {
             throw new IllegalArgumentException();
-        } else if (annuals.get(annuals.size()-1).getAnnualCount() >= period && (request.getStartDay().getDayOfMonth() - LocalDate.now().getDayOfMonth() ) > rule ) {
-            for (int i = 0; i <= period; i++) {
-                AttendanceHistory attendance = attendanceHistoryRepository.save(new AttendanceHistory(member, request.getStartDay().plusDays(i), LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0), LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0)));
-                attendance.setToday(request.getStartDay().plusDays(i));
-                attendance.setStartTime(LocalDateTime.of(request.getStartDay().getYear(), request.getStartDay().getMonth(), request.getStartDay().getDayOfMonth(), 0, 0));
-                // today랑 startTime은 생성할 때 알아서 만들어져서 셋으로 바로 수정
-            }
-            annuals.get(annuals.size()-1).setAnnualCount(abc); // 사용한 만큼 연차일도 수정
+        } else if (byIdAndYear.getAnnualCount() >= period && daysBetween > rule ) {
+            System.out.println("작동되나요?");
+            AttendanceHistory attendance = attendanceHistoryRepository.save(new AttendanceHistory(member, null, null, LocalDateTime.of(request.getUseDay().getYear(), request.getUseDay().getMonth(), request.getUseDay().getDayOfMonth(), 0, 0)));
+            attendance.setToday(request.getUseDay());
+            attendance.setStartTime(LocalDateTime.of(request.getUseDay().getYear(), request.getUseDay().getMonth(), request.getUseDay().getDayOfMonth(), 0, 0));
+            byIdAndYear.setAnnualCount(abc); // 사용한 만큼 연차일도 수정
         }
 
     }
@@ -160,6 +163,17 @@ public class MemberService {
 
         return annuals.get(annuals.size()-1).getAnnualCount();
 
+    }
+
+    public AllMemberResponse getAllOverTime() {
+        
+        // 1. 모든 멤버를 가져온다
+        List<Member> members = memberRepository.findAll();
+        // 2. 달을 기반으로 각 멤버의 총 업무시간을 나오게한다
+
+
+
+        return null;
     }
 
 

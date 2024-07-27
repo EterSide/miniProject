@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity @NoArgsConstructor
 @Getter @Setter
 public class Annual {
@@ -15,6 +17,8 @@ public class Annual {
 
     @ManyToOne
     private Member member;
+
+    private int year = LocalDate.now().getYear();
 
     private int annualCount;
 

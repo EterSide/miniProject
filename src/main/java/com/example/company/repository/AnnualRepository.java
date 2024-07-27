@@ -9,5 +9,5 @@ import java.util.List;
 public interface AnnualRepository extends JpaRepository<Annual, Long> {
 
     List<Annual> findByMember(Member member);
-
+    Annual findByMemberAndYear(Member member, int year);
 }
