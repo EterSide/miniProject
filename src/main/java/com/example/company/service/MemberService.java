@@ -3,10 +3,7 @@ package com.example.company.service;
 import com.example.company.domain.Annual;
 import com.example.company.domain.AttendanceHistory;
 import com.example.company.domain.Member;
-import com.example.company.dto.request.AnnualUseRequest;
-import com.example.company.dto.request.AttendanceHistoryCheckRequest;
-import com.example.company.dto.request.AttendanceHistoryRequest;
-import com.example.company.dto.request.MemberAddRequest;
+import com.example.company.dto.request.*;
 import com.example.company.dto.response.*;
 import com.example.company.repository.AnnualRepository;
 import com.example.company.repository.AttendanceHistoryRepository;
@@ -15,7 +12,6 @@ import com.example.company.repository.TeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -166,13 +162,29 @@ public class MemberService {
 
     }
 
-    public AllMemberResponse getAllOverTime() {
+    public AllMemberOverWorkResponse getAllOverTime(AllMemberOverWorkRequest request) {
         
         // 1. 모든 멤버를 가져온다
         List<Member> members = memberRepository.findAll();
         // 2. 달을 기반으로 각 멤버의 총 업무시간을 나오게한다
+        List<OverTimeDto> overTimeDtoList = new ArrayList<>();
+        for(int i = 0; i < members.size(); i++) {
+            Member member = members.get(i);
+            YearMonth month = YearMonth.of(Integer.parseInt(request.getYearMonth().split("-")[0]),Integer.parseInt(request.getYearMonth().split("-")[1]));
+            List<AttendanceHistory> attendanceHistories = attendanceHistoryRepository.findAllWithinDateRange(member, month.atDay(1),month.atEndOfMonth());
+            long sum = 0;
+            int normalWorking = 22 * 480; // 이 정상근무일를 계산하는 방법만 찾으면 될듯..
+            long overWorking = 0;
 
-        return null;
+            for(int j = 0; j < attendanceHistories.size(); j++){
+                sum += attendanceHistories.get(j).getWorkingMinutes();
+            }
+            if(normalWorking < sum) overWorking = sum - normalWorking;
+            OverTimeDto overTimeDto = new OverTimeDto(member.getId(), member.getName(), overWorking);
+            overTimeDtoList.add(overTimeDto);
+        }
+        AllMemberOverWorkResponse allMemberOverWorkResponse = new AllMemberOverWorkResponse(overTimeDtoList);
+        return allMemberOverWorkResponse;
     }
 
 

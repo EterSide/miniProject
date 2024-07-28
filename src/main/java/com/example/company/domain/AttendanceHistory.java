@@ -44,6 +44,7 @@ public class AttendanceHistory {
         return minutes;
     }
 
+
     public AttendanceHistory(Member member) {
         this.member = member;
     }

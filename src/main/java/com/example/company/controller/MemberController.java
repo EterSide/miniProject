@@ -1,11 +1,8 @@
 package com.example.company.controller;
 
 
-import com.example.company.dto.request.AnnualUseRequest;
-import com.example.company.dto.request.AttendanceHistoryCheckRequest;
-import com.example.company.dto.request.AttendanceHistoryRequest;
-import com.example.company.dto.request.MemberAddRequest;
-import com.example.company.dto.response.AllMemberResponse;
+import com.example.company.dto.request.*;
+import com.example.company.dto.response.AllMemberOverWorkResponse;
 import com.example.company.dto.response.AttendanceHistoryResponse;
 import com.example.company.dto.response.MemberResponse;
 import com.example.company.service.MemberService;
@@ -61,8 +58,8 @@ public class MemberController {
     }
 
     @GetMapping("/member/overtime")
-    public AllMemberResponse getAllOverTime(@RequestBody AttendanceHistoryRequest request) {
-        return getAllOverTime(request);
+    public AllMemberOverWorkResponse getAllOverTime(@RequestBody AllMemberOverWorkRequest request) {
+        return memberService.getAllOverTime(request);
     }
 
 
